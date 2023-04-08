@@ -10,8 +10,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const PORT = process.env.PORT || 3030;
+
 app.get("/", (req, res) => {
-  res.send("Hello, world!");
+  res.send("Hello");
 });
 app.post("/scrape", (req, res) => {
   const ulr_to_scrape = req.body.url_to_scrape;
@@ -33,6 +35,6 @@ app.post("/scrape", (req, res) => {
     });
 });
 
-app.listen(3000, () => {
-  console.log("Server is listening on port 3000");
+app.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
 });
