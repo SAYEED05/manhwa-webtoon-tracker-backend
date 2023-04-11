@@ -42,6 +42,7 @@ const mangakakalotParser = ({ url, html }) => {
     .text()
     .trim()
     .replace("Chapter ", "");
+  const is_finished = false;
   const res_object_to_send = {
     title,
     description,
