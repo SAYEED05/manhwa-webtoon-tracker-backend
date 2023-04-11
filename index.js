@@ -19,7 +19,12 @@ app.post("/scrape", (req, res) => {
   const ulr_to_scrape = req.body.url_to_scrape;
 
   axios
-    .get(ulr_to_scrape)
+    .get(ulr_to_scrape, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+      },
+    })
     .then((response) => {
       const html = response.data;
       const res_object_to_send = selectParserFunction({

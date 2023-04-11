@@ -3,8 +3,14 @@ import cheerio from "cheerio";
 
 const mangaTxParser = ({ url, html }) => {
   const $ = cheerio.load(html);
-  const title = $("title").text();
-  const description = $('meta[name="description"]').attr("content");
+  const title = $("div.post-title h1")
+    .contents()
+    .filter(function () {
+      return this.nodeType === 3; // text node
+    })
+    .text()
+    .trim();
+  const description = $("div.summary__content").html();
   const imgSrc = $("div.summary_image a img").attr("data-src");
   const latestChapter = $("li.wp-manga-chapter")
     ?.first()
@@ -14,6 +20,28 @@ const mangaTxParser = ({ url, html }) => {
     .replace("Chapter ", "");
   const is_finished = false;
 
+  const res_object_to_send = {
+    title,
+    description,
+    imgSrc,
+    latestChapter: Number(latestChapter),
+    is_finished,
+    site_you_read_at: url,
+  };
+
+  return res_object_to_send;
+};
+const mangakakalotParser = ({ url, html }) => {
+  const $ = cheerio.load(html);
+  const title = $("ul.manga-info-text li h1").text();
+  const description = $('meta[name="description"]').attr("content");
+  const imgSrc = $("div.manga-info-pic img").attr("src");
+  const latestChapter = $("div.chapter-list .row")
+    ?.first()
+    .find("a")
+    .text()
+    .trim()
+    .replace("Chapter ", "");
   const res_object_to_send = {
     title,
     description,
@@ -66,8 +94,10 @@ const selectParserFunction = ({ url, html }) => {
   switch (domain) {
     case "mangatx.com":
       return mangaTxParser({ url, html });
-    case "asurascans.com":
-      return asuraScanParser({ url, html });
+    case "mangakakalot.com":
+      return mangakakalotParser({ url, html });
+    // case "asurascans.com":
+    //   return asuraScanParser({ url, html });
     case "returnofthelegendaryspearknight.online":
       return returnofthelegendaryspearknight({ url, html });
 
