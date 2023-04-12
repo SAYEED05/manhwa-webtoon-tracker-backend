@@ -1,6 +1,7 @@
 import { URL } from "url";
 import cheerio from "cheerio";
 
+const regexToMatchChapterNumber = /\/chapter[-_](\d+-\d+|\d+\.\d+|\d+)/;
 const mangaTxParser = ({ url, html }) => {
   const $ = cheerio.load(html);
   const title = $("div.post-title h1")
@@ -12,12 +13,12 @@ const mangaTxParser = ({ url, html }) => {
     .trim();
   const description = $("div.summary__content").html();
   const imgSrc = $("div.summary_image a img").attr("data-src");
-  const latestChapter = $("li.wp-manga-chapter")
+  const latestChapterRaw = $("li.wp-manga-chapter")
     ?.first()
     .find("a")
-    .text()
-    .trim()
-    .replace("Chapter ", "");
+    .attr("href");
+  const match = latestChapterRaw.match(regexToMatchChapterNumber);
+  const latestChapter = match?.[1].replace(/-/g, ".");
   const is_finished = false;
 
   const res_object_to_send = {
@@ -36,13 +37,66 @@ const mangakakalotParser = ({ url, html }) => {
   const title = $("ul.manga-info-text li h1").text();
   const description = $('meta[name="description"]').attr("content");
   const imgSrc = $("div.manga-info-pic img").attr("src");
-  const latestChapter = $("div.chapter-list .row")
+  const latestChapterRaw = $("div.chapter-list .row")
+    .first()
+    .find("a")
+    .attr("href");
+  const match = latestChapterRaw.match(regexToMatchChapterNumber);
+  const latestChapter = match?.[1];
+  const is_finished = false;
+  const res_object_to_send = {
+    title,
+    description,
+    imgSrc,
+    latestChapter: Number(latestChapter),
+    is_finished,
+    site_you_read_at: url,
+  };
+
+  return res_object_to_send;
+};
+
+const chapmanganatoParser = ({ url, html }) => {
+  const $ = cheerio.load(html);
+  const title = $("div.story-info-right h1").text();
+  const description = $("div.panel-story-info-description").html();
+  const imgSrc = $("div.story-info-left span img").attr("src");
+  const latestChapterRaw = $("ul.row-content-chapter li.a-h")
     ?.first()
     .find("a")
-    .text()
-    .trim()
-    .replace("Chapter ", "");
-  const is_finished = false;
+    .attr("href");
+  const match = latestChapterRaw.match(regexToMatchChapterNumber);
+  const latestChapter = match?.[1];
+  const status = $('td:contains("Status")').next().text().trim();
+  const is_finished = status === "Completed";
+
+  const res_object_to_send = {
+    title,
+    description,
+    imgSrc,
+    latestChapter: Number(latestChapter),
+    is_finished,
+    site_you_read_at: url,
+  };
+
+  return res_object_to_send;
+};
+const manganatoParser = ({ url, html }) => {
+  const $ = cheerio.load(html);
+  const title = $("div.story-info-right h1").text();
+  const description = $("div.panel-story-info-description").html();
+  const imgSrc = $("div.story-info-left span img").attr("src");
+  const latestChapterRaw = $("ul.row-content-chapter li.a-h")
+    ?.first()
+    .find("a")
+    .attr("href");
+
+  const match = latestChapterRaw.match(regexToMatchChapterNumber);
+  const latestChapter = match?.[1];
+
+  const status = $('td:contains("Status")').next().text().trim();
+  const is_finished = status === "Completed";
+
   const res_object_to_send = {
     title,
     description,
@@ -97,6 +151,10 @@ const selectParserFunction = ({ url, html }) => {
       return mangaTxParser({ url, html });
     case "mangakakalot.com":
       return mangakakalotParser({ url, html });
+    case "chapmanganato.com":
+      return chapmanganatoParser({ url, html });
+    case "manganato.com":
+      return manganatoParser({ url, html });
     // case "asurascans.com":
     //   return asuraScanParser({ url, html });
     case "returnofthelegendaryspearknight.online":
@@ -111,4 +169,7 @@ export {
   mangaTxParser,
   asuraScanParser,
   returnofthelegendaryspearknight,
+  mangakakalotParser,
+  chapmanganatoParser,
+  manganatoParser,
 };
